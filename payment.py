@@ -27,18 +27,25 @@ def validate_currency(currency):
 def process_payment(
     amount,
     currency,
-    customer_type="standard"
+    customer_type="standard",
+    payment_method="card"
 ):
 
-    # Reject invalid amounts.
+    # Reject invalid payment amounts.
     if amount<= 0:
         return False
 
-    # Reject unsupported currencies.
+    # Check that the currency is supported.
     if not validate_currency(currency):
         return False
 
-    # Calculate currency-specific fees.
+    # NEW CHANGE:
+    # Check that the payment method
+    # is supported.
+    if not validate_payment_method(payment_method):
+        return False
+
+    # Calculate the transaction fee.
     if currency== "USD":
         fee= amount* 0.02
 
@@ -48,20 +55,23 @@ def process_payment(
     else:
         fee= amount* 0.05
 
-    # NEW CHANGE:
-    # Calculate any customer discount.
+    # Calculate the customer discount.
     discount= calculate_discount(
         amount,
         customer_type
     )
 
-    # NEW CHANGE:
-    # Subtract the discount from the
-    # amount plus the transaction fee.
+    # Calculate final transaction amount.
     total= amount+ fee- discount
 
-    # Display the final amount.
-    print("Processing:", total)
+    # NEW CHANGE:
+    # Display which payment method is being used.
+    print(
+        "Processing:",
+        total,
+        "using",
+        payment_method
+    )
 
     return True
 
@@ -81,3 +91,21 @@ def calculate_discount(amount, customer_type):
 
     # Standard customers receive no discount.
     return 0
+
+# NEW FUNCTION
+# ------------------------------
+# Checks whether the payment method
+# is supported by the application.
+def validate_payment_method(method):
+
+    # Payment methods supported by
+    # our demo application.
+    supported= [
+        "card",
+        "bank_transfer",
+        "paypal"
+    ]
+
+    # Return True if the supplied method
+    # is in our supported list.
+    return method in supported
