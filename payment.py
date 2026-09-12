@@ -18,23 +18,27 @@ def validate_currency(currency):
     return currency in supported
 
 
-# EXISTING FUNCTION
+# MODIFIED FUNCTION
 # ------------------------------
-# This function already existed in
-# Commit 1, but we are modifying it.
-def process_payment(amount, currency):
+# The function now accepts customer_type.
+#
+# This is different from Commit 2 because
+# we added a new parameter.
+def process_payment(
+    amount,
+    currency,
+    customer_type="standard"
+):
 
-    # Reject invalid payment amounts.
+    # Reject invalid amounts.
     if amount<= 0:
         return False
 
-    # NEW CHANGE:
-    # Before processing the payment,
-    # make sure the currency is supported.
+    # Reject unsupported currencies.
     if not validate_currency(currency):
         return False
 
-    # Calculate the transaction fee.
+    # Calculate currency-specific fees.
     if currency== "USD":
         fee= amount* 0.02
 
@@ -42,15 +46,38 @@ def process_payment(amount, currency):
         fee= amount* 0.03
 
     else:
-        # GBP, JPY, and other supported currencies
-        # currently use a 5% fee.
         fee= amount* 0.05
 
-    # Calculate the final payment amount.
-    total= amount+ fee
+    # NEW CHANGE:
+    # Calculate any customer discount.
+    discount= calculate_discount(
+        amount,
+        customer_type
+    )
 
-    # Display the transaction.
+    # NEW CHANGE:
+    # Subtract the discount from the
+    # amount plus the transaction fee.
+    total= amount+ fee- discount
+
+    # Display the final amount.
     print("Processing:", total)
 
-    # Payment was processed successfully.
     return True
+
+# NEW FUNCTION
+# ------------------------------
+# Calculates a discount based on
+# the type of customer.
+def calculate_discount(amount, customer_type):
+
+    # Premium customers receive a 10% discount.
+    if customer_type== "premium":
+        return amount* 0.10
+
+    # Students receive a 5% discount.
+    if customer_type== "student":
+        return amount* 0.05
+
+    # Standard customers receive no discount.
+    return 0
