@@ -31,7 +31,7 @@ def process_payment(
     payment_method="card"
 ):
 
-    # Reject invalid payment amounts.
+    # Reject zero or negative payments.
     if amount<= 0:
         return False
 
@@ -39,10 +39,17 @@ def process_payment(
     if not validate_currency(currency):
         return False
 
-    # NEW CHANGE:
-    # Check that the payment method
-    # is supported.
+    # Check that the payment method is supported.
     if not validate_payment_method(payment_method):
+        return False
+
+    # NEW CHANGE:
+    # Check whether this customer is allowed
+    # to make a transaction of this size.
+    if not validate_transaction_limit(
+        amount,
+        customer_type
+    ):
         return False
 
     # Calculate the transaction fee.
@@ -55,17 +62,16 @@ def process_payment(
     else:
         fee= amount* 0.05
 
-    # Calculate the customer discount.
+    # Calculate any customer discount.
     discount= calculate_discount(
         amount,
         customer_type
     )
 
-    # Calculate final transaction amount.
+    # Calculate the final transaction amount.
     total= amount+ fee- discount
 
-    # NEW CHANGE:
-    # Display which payment method is being used.
+    # Display transaction information.
     print(
         "Processing:",
         total,
@@ -73,6 +79,7 @@ def process_payment(
         payment_method
     )
 
+    # Report successful processing.
     return True
 
 # NEW FUNCTION
@@ -109,3 +116,26 @@ def validate_payment_method(method):
     # Return True if the supplied method
     # is in our supported list.
     return method in supported
+
+# NEW FUNCTION
+# ------------------------------
+# Determines whether a transaction
+# is within the customer's allowed limit.
+def validate_transaction_limit(
+    amount,
+    customer_type
+):
+
+    # Premium customers can make
+    # transactions up to $10,000.
+    if customer_type== "premium":
+        return amount<= 10000
+
+    # Standard customers can make
+    # transactions up to $5,000.
+    if customer_type== "standard":
+        return amount<= 5000
+
+    # Other customer types have
+    # a smaller $1,000 limit.
+    return amount<= 1000
